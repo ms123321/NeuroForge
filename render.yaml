@@ -1,0 +1,20 @@
+# Render Blueprint — https://render.com
+# Dashboard: New → Blueprint → connect ms123321/NeuroForge
+# Or: New → Web Service → this repo (manual settings below match)
+
+services:
+  - type: web
+    name: neuroforge
+    runtime: python
+    plan: free
+    region: oregon
+    branch: main
+    buildCommand: pip install -r requirements.txt
+    startCommand: python start.py
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.8"
+      - key: SECRET_KEY
+        generateValue: true
+      # Render sets PORT automatically — start.py reads it

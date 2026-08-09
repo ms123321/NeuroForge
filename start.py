@@ -47,15 +47,17 @@ def main() -> int:
         app.run(host="0.0.0.0", port=port, debug=False, threaded=True)
         return 0
 
-    print(f"Starting Waitress on 0.0.0.0:{port}", flush=True)
-    # threads: concurrent requests without multi-process complexity
+    # Render / Railway / proxies terminate TLS; app sees http behind proxy
+    scheme = os.environ.get("URL_SCHEME", "https")
+    print(f"Starting Waitress on 0.0.0.0:{port} (url_scheme={scheme})", flush=True)
     serve(
         app,
         host="0.0.0.0",
         port=port,
         threads=8,
-        url_scheme=os.environ.get("WAITER_URL_SCHEME", "https"),
+        url_scheme=scheme,
         ident="NeuroForge",
+        channel_timeout=120,
     )
     return 0
 

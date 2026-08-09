@@ -32,29 +32,20 @@ python -m webapp.app
 
 ## Deploy to the internet
 
-### Option A — Railway / Render / Fly.io (recommended)
+### Option A — Render (recommended for Despia)
 
-**Full Railway fix guide:** [`RAILWAY.md`](RAILWAY.md)  
-(If you see **404 lost** on `railway.com/project/…`, that is the *dashboard*, not the game — generate a service domain.)
+**Full guide:** [`RENDER.md`](RENDER.md)
 
-1. Create a free account on [Railway](https://railway.com), [Render](https://render.com), or [Fly.io](https://fly.io).  
-2. Connect GitHub repo **`ms123321/NeuroForge`**.  
-3. Start command (also in `Procfile` / `railway.toml` / `Dockerfile`):
+1. [Render](https://render.com) → **New → Web Service** (or Blueprint + `render.yaml`)  
+2. Connect GitHub **`ms123321/NeuroForge`**  
+3. Build: `pip install -r requirements.txt`  
+4. Start: `python start.py`  
+5. Env: `SECRET_KEY=<long-random-string>` (Render sets `PORT`)  
+6. Open `https://your-service.onrender.com` → paste into Despia  
 
-```text
-python start.py
-```
+### Option A2 — Railway / Fly.io
 
-(Do **not** use bare `gunicorn` — use `python start.py` so PATH is never required.)
-
-4. Install uses root `requirements.txt` (includes Flask + gunicorn).  
-5. Env:
-
-```text
-SECRET_KEY=<long-random-string>
-```
-
-6. **Generate Domain** on the service → open `https://….up.railway.app` (not the project settings URL).
+See [`RAILWAY.md`](RAILWAY.md) or Fly.io with the same `python start.py` start command.
 
 ### Option B — PythonAnywhere
 
