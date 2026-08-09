@@ -2,14 +2,15 @@
 cmds = [
   "pip install -r requirements.txt",
   "mkdir -p bin",
-  "printf '#!/bin/sh\\nexec python -m gunicorn \"$@\"\\n' > bin/gunicorn",
+  "printf '%s\\n' '#!/bin/sh' 'exec python -m gunicorn \"$@\"' > bin/gunicorn",
   "chmod +x bin/gunicorn",
-  "mkdir -p $NIXPACKS_PATH 2>/dev/null || true",
-  "cp bin/gunicorn /usr/local/bin/gunicorn 2>/dev/null || cp bin/gunicorn $HOME/.local/bin/gunicorn 2>/dev/null || true",
-  "chmod +x /usr/local/bin/gunicorn 2>/dev/null || true"
+  "cp bin/gunicorn /usr/local/bin/gunicorn || true",
+  "chmod +x /usr/local/bin/gunicorn || true",
+  "python -m gunicorn --version"
 ]
 
 [variables]
+NIXPACKS_PATH = "/app/bin:/usr/local/bin"
 PATH = "/app/bin:/usr/local/bin:$PATH"
 
 [start]

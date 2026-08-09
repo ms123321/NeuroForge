@@ -7,10 +7,11 @@ What runs in production:
 | Piece | Value |
 |-------|--------|
 | Build | `Dockerfile` |
-| Start | `python start.py` |
+| Start | `python start.py` (never bare `gunicorn` on PATH) |
 | Bind | `0.0.0.0:8080` |
-| Workers | 1 gunicorn worker |
+| Workers | 1 gunicorn worker (loaded inside start.py) |
 | Health | `/api/health` |
+| Shim | `bin/gunicorn` → `python -m gunicorn` if host still calls `gunicorn` |
 
 ---
 

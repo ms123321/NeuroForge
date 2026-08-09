@@ -1,12 +1,10 @@
-# If the Railway UI has a Custom Start Command containing bare `gunicorn`,
-# the Docker image now provides a PATH shim → python -m gunicorn.
-# Prefer clearing the UI field so this startCommand is used:
-
 [build]
 builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
 
 [deploy]
+# Git-controlled start (clear any old "gunicorn ..." in the Railway UI
+# or this may be overridden by a saved Custom Start Command)
 startCommand = "python start.py"
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10

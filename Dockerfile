@@ -1,7 +1,5 @@
-# NeuroForge — Railway / Docker
-# Includes a PATH shim so even a dashboard start command of
-#   gunicorn -b 0.0.0.0:$PORT ...
-# works (fixes: /bin/bash: line 1: gunicorn: command not found)
+# NeuroForge production image for Railway
+# Start: python start.py  (also provides `gunicorn` shim on PATH)
 
 FROM python:3.12-slim
 
@@ -11,7 +9,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PORT=8080 \
     WEB_CONCURRENCY=1 \
-    PATH="/app/bin:/usr/local/bin:$PATH"
+    PATH="/app/bin:/usr/local/bin:${PATH}"
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates \
@@ -19,27 +17,20 @@ RUN apt-get update \
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt \
-    && python -c "import gunicorn, flask; print('deps-ok', gunicorn.__version__)"
+    && pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-# Install gunicorn CLI shim onto PATH (covers bad Railway custom start commands)
-RUN mkdir -p /app/bin \
-    && printf '%s\n' \
-        '#!/bin/sh' \
-        'exec python -m gunicorn "$@"' \
-        > /app/bin/gunicorn \
-    && printf '%s\n' \
-        '#!/bin/sh' \
-        'exec python -m gunicorn "$@"' \
-        > /usr/local/bin/gunicorn \
-    && chmod +x /app/bin/gunicorn /usr/local/bin/gunicorn \
-    && sed -i 's/\r$//' /app/bin/gunicorn /usr/local/bin/gunicorn /app/start.sh 2>/dev/null || true \
-    && gunicorn --version \
+# Ensure LF scripts + gunicorn on PATH (shell shim + pip console script)
+RUN sed -i 's/\r$//' /app/bin/gunicorn /app/start.sh 2>/dev/null || true \
+    && chmod +x /app/bin/gunicorn /app/start.sh \
+    && cp /app/bin/gunicorn /usr/local/bin/gunicorn \
+    && chmod +x /usr/local/bin/gunicorn \
+    && python -c "import gunicorn, flask; print('deps-ok', gunicorn.__version__)" \
+    && python -m gunicorn --version \
+    && /usr/local/bin/gunicorn --version \
     && python -c "from webapp.app import app; print('build-import-ok')"
 
 EXPOSE 8080
 
-# Preferred start (also set this in Railway if you use a custom command)
 CMD ["python", "start.py"]

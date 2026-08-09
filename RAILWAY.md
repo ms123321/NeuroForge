@@ -44,10 +44,11 @@ Railway’s domain works, but nothing answers inside the container.
    SECRET_KEY=any-long-random-string
    ```
 2. **Public Networking** — domain port must be **`8080`** (same as PORT).
-3. **Settings → Deploy** — start command:
+3. **Settings → Deploy** — start command (must match git):
    ```text
-   gunicorn -b 0.0.0.0:$PORT -w 1 -t 120 --access-logfile - --error-logfile - webapp.app:app
+   python start.py
    ```
+   Delete any old command that starts with bare `gunicorn`.
 4. **Deployments** → open the latest deploy → **View Logs**.
    - Look for `Listening at: http://0.0.0.0:8080` or similar.
    - Red traceback = crash (copy it and fix).

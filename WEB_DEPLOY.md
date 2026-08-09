@@ -39,11 +39,13 @@ python -m webapp.app
 
 1. Create a free account on [Railway](https://railway.com), [Render](https://render.com), or [Fly.io](https://fly.io).  
 2. Connect GitHub repo **`ms123321/NeuroForge`**.  
-3. Start command (also in `Procfile` / `railway.toml`):
+3. Start command (also in `Procfile` / `railway.toml` / `Dockerfile`):
 
 ```text
-gunicorn -b 0.0.0.0:$PORT -w 2 webapp.app:app
+python start.py
 ```
+
+(Do **not** use bare `gunicorn` — use `python start.py` so PATH is never required.)
 
 4. Install uses root `requirements.txt` (includes Flask + gunicorn).  
 5. Env:

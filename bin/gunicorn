@@ -1,14 +1,3 @@
-#!/usr/bin/env python3
-"""
-Shim so `gunicorn ...` works when Railway uses a custom start command
-that expects a bare `gunicorn` binary on PATH.
-
-Delegates to: python -m gunicorn <same args>
-"""
-import runpy
-import sys
-
-if __name__ == "__main__":
-    # Emulate: python -m gunicorn <args>
-    sys.argv[0] = "gunicorn"
-    runpy.run_module("gunicorn", run_name="__main__")
+#!/bin/sh
+# Shim: bare gunicorn -> python -m gunicorn
+exec python -m gunicorn "$@"
