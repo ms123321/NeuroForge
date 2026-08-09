@@ -1,5 +1,5 @@
 # NeuroForge — Railway / Docker
-# Public Networking port MUST match PORT (use 8080)
+# Never rely on `gunicorn` being on PATH — use `python start.py`
 
 FROM python:3.12-slim
 
@@ -8,7 +8,8 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PORT=8080 \
-    WEB_CONCURRENCY=1
+    WEB_CONCURRENCY=1 \
+    PATH="/usr/local/bin:$PATH"
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates \
@@ -16,14 +17,15 @@ RUN apt-get update \
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt
+    && pip install --no-cache-dir -r requirements.txt \
+    && python -c "import gunicorn, flask; print('deps-ok', gunicorn.__version__, flask.__version__)"
 
 COPY . .
 
-# Prove the image can import the app at build time (fails the build early)
+# Build-time smoke test
 RUN python -c "from webapp.app import app; print('build-import-ok')"
 
 EXPOSE 8080
 
-# Pure Python entry — no shell $PORT expansion issues
+# Module entry — works even if gunicorn binary is not on PATH
 CMD ["python", "start.py"]

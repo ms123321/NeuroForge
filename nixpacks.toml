@@ -1,6 +1,6 @@
-# Fallback if Docker is not used
+# If Railway uses Nixpacks instead of Docker, still avoid bare `gunicorn`
 [phases.install]
 cmds = ["pip install -r requirements.txt"]
 
 [start]
-cmd = "gunicorn -b 0.0.0.0:${PORT:-8080} -w 1 -t 120 --access-logfile - --error-logfile - webapp.app:app"
+cmd = "python start.py"

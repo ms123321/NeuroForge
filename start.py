@@ -1,8 +1,9 @@
 """
-Production entrypoint for Railway / Docker.
+Production entrypoint for Railway / Docker / Procfile.
 
-Always binds 0.0.0.0:$PORT (default 8080) with a single gunicorn worker.
-Avoids fragile shell $PORT expansion and CRLF issues on start.sh.
+Uses gunicorn as a Python module (never the bare `gunicorn` shell command),
+so "gunicorn: command not found" cannot happen.
+Binds 0.0.0.0:$PORT (default 8080), 1 worker.
 """
 
 from __future__ import annotations
@@ -11,7 +12,6 @@ import os
 import sys
 from pathlib import Path
 
-# Project root on path (same as webapp.app)
 ROOT = Path(__file__).resolve().parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
@@ -19,26 +19,24 @@ if str(ROOT) not in sys.path:
 
 def main() -> None:
     port = int(os.environ.get("PORT") or "8080")
-    # Railway public networking must forward to this same port
     os.environ["PORT"] = str(port)
 
     print("=" * 40, flush=True)
     print(" NeuroForge production start", flush=True)
     print(f" PORT={port}", flush=True)
     print(f" bind=0.0.0.0:{port}", flush=True)
-    print(f" workers=1", flush=True)
+    print(" workers=1", flush=True)
     print("=" * 40, flush=True)
 
-    # Import after path setup so failures show in logs
-    from webapp.app import app  # noqa: WPS433
+    from webapp.app import app
 
     print("Flask app loaded OK", flush=True)
 
+    # Prefer programmatic gunicorn (no PATH needed)
     try:
         from gunicorn.app.base import BaseApplication
     except ImportError:
-        # Fallback if gunicorn missing (should not happen in Docker image)
-        print("gunicorn missing — using Flask dev server", flush=True)
+        print("WARNING: gunicorn not installed — Flask fallback", flush=True)
         app.run(host="0.0.0.0", port=port, debug=False, threaded=True)
         return
 
@@ -69,7 +67,7 @@ def main() -> None:
         "loglevel": "info",
         "preload_app": True,
     }
-    print(f"Starting gunicorn on {options['bind']}", flush=True)
+    print(f"Starting gunicorn (python module) on {options['bind']}", flush=True)
     _App(app, options).run()
 
 

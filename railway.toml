@@ -1,17 +1,17 @@
-# Railway: Docker + single-worker gunicorn on PORT 8080
+# Railway — always start via Python (never bare `gunicorn` on PATH)
 #
-# Dashboard checklist:
-#   Variables:  PORT=8080   SECRET_KEY=<random>
+# Dashboard:
+#   Variables: PORT=8080  SECRET_KEY=...
 #   Public Networking port: 8080
-#   Custom Start Command: (empty — use Docker CMD)
-#   Healthcheck Path: (empty)  OR  /api/health with timeout >= 100
+#   Custom Start Command: leave EMPTY or set exactly:
+#     python start.py
+#   Healthcheck: leave EMPTY for first deploy
 
 [build]
 builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
 
 [deploy]
-# No healthcheck — avoids "Network › Healthcheck" aborting good deploys.
-# After the site works, optional: healthcheckPath = "/api/health"
+startCommand = "python start.py"
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10

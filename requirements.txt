@@ -1,8 +1,10 @@
-# Production / Railway / Render / web (default install target)
-# Desktop tkinter still needs no pip packages beyond these if you only run main.py —
-# Flask is only used by the webapp.
-flask>=3.0.0
-gunicorn>=22.0.0
+# Production / Railway / Render / web
+# Start with:  python start.py
+# (Do NOT use bare `gunicorn` on PATH — use start.py or: python -m gunicorn ...)
+flask>=3.0.0,<4
+gunicorn>=22.0.0,<24
+werkzeug>=3.0.0
 
-# Mobile packaging (optional — only if building with Briefcase):
+# Mobile packaging (optional):
 #   pip install -r requirements-mobile.txt
+
