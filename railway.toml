@@ -1,14 +1,16 @@
-# Railway config
-# Public Networking port = 8080  AND  Variable PORT = 8080
+# Railway config for NeuroForge
+#
+# In the dashboard ALSO check:
+#   Settings → Deploy → Healthcheck Path → leave EMPTY / disabled
+#   Public Networking port = 8080
+#   Variable PORT = 8080
 
 [build]
 builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
 
 [deploy]
-# Let Dockerfile CMD (start.sh) run — do NOT override with a broken startCommand
-# that leaves $PORT unexpanded.
-healthcheckPath = "/api/health"
-healthcheckTimeout = 100
+# Healthcheck DISABLED — a failed probe was aborting good deploys.
+# (Re-enable later with path /api/health once the app is stable.)
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10

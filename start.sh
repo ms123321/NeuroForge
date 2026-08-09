@@ -1,22 +1,29 @@
 #!/bin/sh
-# Railway / Docker entrypoint — always bind to PORT (default 8080)
-set -e
+# Railway entrypoint — bind immediately on PORT (default 8080)
+set -eu
 
-export PORT="${PORT:-8080}"
+PORT="${PORT:-8080}"
+export PORT
 export PYTHONUNBUFFERED=1
 
-echo "NeuroForge starting on 0.0.0.0:${PORT}"
-echo "Python: $(python --version 2>&1)"
-echo "PWD: $(pwd)"
+echo "========================================"
+echo " NeuroForge boot"
+echo " PORT=${PORT}"
+echo " PWD=$(pwd)"
+echo " Python=$(python --version 2>&1)"
+echo "========================================"
 
-# Prove the app imports before gunicorn (shows errors in Railway logs)
-python -c "from webapp.app import app; print('Flask app import OK', flush=True)"
-
+# Fast path: start gunicorn without a separate pre-import process
+# (pre-import doubled boot time and could race the healthcheck)
 exec gunicorn \
-  -b "0.0.0.0:${PORT}" \
-  -w 1 \
-  -t 120 \
+  --bind "0.0.0.0:${PORT}" \
+  --workers 1 \
+  --threads 4 \
+  --timeout 120 \
+  --graceful-timeout 30 \
+  --keep-alive 5 \
   --access-logfile - \
   --error-logfile - \
   --capture-output \
+  --log-level info \
   webapp.app:app

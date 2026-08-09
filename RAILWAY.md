@@ -13,6 +13,25 @@ That does **not** mean the game URL is ready. You must **deploy a service** firs
 
 ---
 
+## Healthcheck failure (Deploy → Network › Healthcheck)
+
+Railway aborted the deploy because `/api/health` did not return 200 in time
+(or the app was not listening yet).
+
+**Fix:**
+
+1. Pull latest `main` (healthcheck removed from `railway.toml`).
+2. In Railway **Service → Settings → Deploy**:
+   - **Healthcheck Path** → clear it / disable healthcheck  
+   - **Custom Start Command** → clear it (use Docker `start.sh`)
+3. Variables: `PORT=8080`, `SECRET_KEY=...`
+4. Public Networking port: **8080**
+5. **Redeploy**
+
+After the site loads, you can re-enable healthcheck with path `/api/health`.
+
+---
+
 ## “Application failed to respond”
 
 Railway’s domain works, but nothing answers inside the container.
