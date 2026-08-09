@@ -59,9 +59,10 @@ def _cors(resp):
 
 @app.get("/health")
 @app.get("/healthz")
+@app.get("/api/healthz")
 def healthz_alias():
     """Extra health paths some hosts probe by default."""
-    return jsonify({"ok": True, "version": __version__})
+    return jsonify({"ok": True, "version": __version__, "port": os.environ.get("PORT", "8080")})
 
 
 @app.get("/")
