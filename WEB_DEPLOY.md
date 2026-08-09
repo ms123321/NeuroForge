@@ -34,28 +34,25 @@ python -m webapp.app
 
 ### Option A — Railway / Render / Fly.io (recommended)
 
-1. Create a free account on [Railway](https://railway.app), [Render](https://render.com), or [Fly.io](https://fly.io).  
-2. Connect this GitHub repo (or upload the project zip).  
-3. Set start command:
+**Full Railway fix guide:** [`RAILWAY.md`](RAILWAY.md)  
+(If you see **404 lost** on `railway.com/project/…`, that is the *dashboard*, not the game — generate a service domain.)
+
+1. Create a free account on [Railway](https://railway.com), [Render](https://render.com), or [Fly.io](https://fly.io).  
+2. Connect GitHub repo **`ms123321/NeuroForge`**.  
+3. Start command (also in `Procfile` / `railway.toml`):
 
 ```text
 gunicorn -b 0.0.0.0:$PORT -w 2 webapp.app:app
 ```
 
-4. Install:
-
-```text
-pip install -r requirements-web.txt
-```
-
-5. Set env vars:
+4. Install uses root `requirements.txt` (includes Flask + gunicorn).  
+5. Env:
 
 ```text
 SECRET_KEY=<long-random-string>
-PORT=8080
 ```
 
-6. Deploy → open the public HTTPS URL.
+6. **Generate Domain** on the service → open `https://….up.railway.app` (not the project settings URL).
 
 ### Option B — PythonAnywhere
 

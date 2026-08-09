@@ -1,3 +1,8 @@
-# Desktop (full game): no third-party deps — Python + tkinter only.
-# Mobile packaging:
+# Production / Railway / Render / web (default install target)
+# Desktop tkinter still needs no pip packages beyond these if you only run main.py —
+# Flask is only used by the webapp.
+flask>=3.0.0
+gunicorn>=22.0.0
+
+# Mobile packaging (optional — only if building with Briefcase):
 #   pip install -r requirements-mobile.txt

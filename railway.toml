@@ -1,0 +1,10 @@
+# Railway config — https://docs.railway.com
+# Dashboard project ≠ public app URL. After deploy, use the service domain.
+
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+startCommand = "gunicorn -b 0.0.0.0:$PORT -w 2 webapp.app:app"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
