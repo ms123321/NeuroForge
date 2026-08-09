@@ -57,8 +57,17 @@ LANGUAGES: dict[str, tuple[str, str]] = {
 
 _current = "en"
 
+
+def _merge_pack(base: dict[str, dict[str, str]], pack: dict[str, dict[str, str]]) -> None:
+    """Overlay pack translations onto base (pack wins for each lang)."""
+    for key, langs in pack.items():
+        block = base.setdefault(key, {})
+        block.update(langs)
+
+
 # UI strings: key -> {lang: text}
 # English is the source; missing keys fall back to en.
+# Full multi-language pack is merged below after STRINGS is defined.
 STRINGS: dict[str, dict[str, str]] = {
     "app.title": {
         "en": "NeuroForge — Brain Training",
@@ -551,6 +560,19 @@ STRINGS: dict[str, dict[str, str]] = {
     },
 }
 
+# Merge full 39-language UI pack (home buttons, settings, etc.)
+try:
+    from neuroforge.i18n_pack import UI_PACK as _UI_PACK
+
+    _merge_pack(STRINGS, _UI_PACK)
+except Exception:
+    try:
+        from .i18n_pack import UI_PACK as _UI_PACK  # type: ignore
+
+        _merge_pack(STRINGS, _UI_PACK)
+    except Exception:
+        pass
+
 # Mode title translations (fallback: English MODE_META)
 MODE_TITLES: dict[str, dict[str, str]] = {
     "focus": {
@@ -600,9 +622,69 @@ def t(key: str, **kwargs: Any) -> str:
     return text
 
 
+def _ensure_mode_titles() -> None:
+    """Ensure every MODE_META key has a title for every language (en + pack)."""
+    try:
+        from neuroforge.modes.meta import MODE_META
+    except Exception:
+        try:
+            from .modes.meta import MODE_META  # type: ignore
+        except Exception:
+            return
+    for key, meta in MODE_META.items():
+        en = (meta or {}).get("title") or key
+        block = MODE_TITLES.setdefault(key, {})
+        if "en" not in block:
+            block["en"] = en
+        # Fill missing languages with English so selection never "fails"
+        for code in LANGUAGES:
+            block.setdefault(code, block.get("en") or en)
+
+
+_ensure_mode_titles()
+
+
 def mode_title(mode_key: str, fallback: str = "") -> str:
     block = MODE_TITLES.get(mode_key) or {}
     return block.get(_current) or block.get("en") or fallback or mode_key
+
+
+def coverage_report() -> dict[str, Any]:
+    """Return per-language completeness for web UI keys (for tests)."""
+    web_keys = [
+        "home.tagline",
+        "home.subtitle",
+        "home.daily",
+        "home.full_gym",
+        "home.full_gym_pro",
+        "home.train",
+        "home.pro",
+        "home.progress",
+        "home.sound_on",
+        "home.sound_off",
+        "home.language",
+        "home.settings",
+        "home.player",
+        "home.streak",
+        "choose_skill",
+        "start",
+        "unlock_pro",
+    ]
+    report: dict[str, Any] = {"languages": {}, "keys": web_keys}
+    for code in LANGUAGES:
+        missing = []
+        for k in web_keys:
+            block = STRINGS.get(k) or {}
+            if code not in block:
+                missing.append(k)
+        report["languages"][code] = {
+            "native": LANGUAGES[code][0],
+            "complete": len(missing) == 0,
+            "missing": missing,
+            "sample_tagline": (STRINGS.get("home.tagline") or {}).get(code, ""),
+        }
+    report["all_complete"] = all(v["complete"] for v in report["languages"].values())
+    return report
 
 
 def language_bar_labels() -> list[tuple[str, str]]:

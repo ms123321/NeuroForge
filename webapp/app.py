@@ -26,6 +26,7 @@ from neuroforge.progress import Progress
 from neuroforge.monetization import FREE_MODE_KEYS, Entitlement
 from neuroforge.i18n import (
     LANGUAGES,
+    coverage_report,
     get_language,
     mode_title,
     set_language,
@@ -138,7 +139,40 @@ def _i18n_payload(lang: str) -> dict:
 def i18n_get():
     prog = Progress.load()
     lang = _apply_lang_from_request(prog)
-    return jsonify(_i18n_payload(lang))
+    payload = _i18n_payload(lang)
+    if request.args.get("coverage"):
+        payload["coverage"] = coverage_report()
+    return jsonify(payload)
+
+
+@app.get("/api/i18n/test")
+def i18n_test_all():
+    """Test every language returns non-English-fallback UI for home.daily when not en."""
+    report = coverage_report()
+    samples = {}
+    for code in LANGUAGES:
+        set_language(code)
+        samples[code] = {
+            "tagline": t("home.tagline"),
+            "daily": t("home.daily"),
+            "train": t("home.train"),
+            "language": t("home.language"),
+        }
+    failed = [
+        code
+        for code, info in report["languages"].items()
+        if not info["complete"]
+    ]
+    return jsonify(
+        {
+            "ok": len(failed) == 0,
+            "all_complete": report["all_complete"],
+            "failed": failed,
+            "language_count": len(LANGUAGES),
+            "samples": samples,
+            "coverage": report,
+        }
+    )
 
 
 @app.post("/api/language")
