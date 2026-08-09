@@ -24,6 +24,13 @@ from neuroforge.modes.meta import MODE_META
 from neuroforge import theme as T
 from neuroforge.progress import Progress
 from neuroforge.monetization import FREE_MODE_KEYS, Entitlement
+from neuroforge.i18n import (
+    LANGUAGES,
+    get_language,
+    mode_title,
+    set_language,
+    t,
+)
 
 from webapp.session_store import STORE
 from webapp.trial_api import apply_answer, trial_to_json
@@ -76,17 +83,87 @@ def health():
     return jsonify({"ok": True, "version": __version__, "modes": len(MODE_META)})
 
 
+# UI keys the web client needs for home/settings/modes
+_WEB_I18N_KEYS = (
+    "app.title",
+    "home.tagline",
+    "home.subtitle",
+    "home.daily",
+    "home.full_gym",
+    "home.full_gym_pro",
+    "home.train",
+    "home.pro",
+    "home.progress",
+    "home.settings",
+    "home.sound_on",
+    "home.sound_off",
+    "home.language",
+    "home.player",
+    "home.streak",
+    "choose_skill",
+    "start",
+    "unlock_pro",
+)
+
+
+def _apply_lang_from_request(prog: Progress | None = None, body: dict | None = None) -> str:
+    """Resolve language from query / JSON body / saved progress and activate it."""
+    prog = prog or Progress.load()
+    lang = request.args.get("lang")
+    if not lang and body:
+        lang = body.get("lang") or body.get("language")
+    if not lang:
+        lang = prog.language or "en"
+    return set_language(str(lang))
+
+
+def _i18n_payload(lang: str) -> dict:
+    set_language(lang)
+    strings = {k: t(k) for k in _WEB_I18N_KEYS}
+    # format helpers that need placeholders — client also formats
+    strings["home.subtitle"] = t("home.subtitle", n="{n}")
+    strings["home.full_gym"] = t("home.full_gym", n="{n}")
+    strings["home.streak"] = t(
+        "home.streak", n="{n}", best="{best}", sessions="{sessions}"
+    )
+    strings["home.player"] = t("home.player", name="{name}", version="{version}")
+    langs = [
+        {"code": code, "label": f"{native}  ({en})"}
+        for code, (native, en) in LANGUAGES.items()
+    ]
+    return {"lang": get_language(), "strings": strings, "languages": langs}
+
+
+@app.get("/api/i18n")
+def i18n_get():
+    prog = Progress.load()
+    lang = _apply_lang_from_request(prog)
+    return jsonify(_i18n_payload(lang))
+
+
+@app.post("/api/language")
+def language_set():
+    body = request.get_json(force=True, silent=True) or {}
+    code = _apply_lang_from_request(body=body)
+    prog = Progress.load()
+    prog.language = code
+    prog.save()
+    return jsonify({"ok": True, **_i18n_payload(code)})
+
+
 @app.get("/api/modes")
 def list_modes():
     ent = Entitlement.load()
     prog = Progress.load()
+    lang = _apply_lang_from_request(prog)
+    sort = (request.args.get("sort") or "default").lower()
     modes = []
     for key, meta in MODE_META.items():
         st = prog.modes.get(key)
         modes.append(
             {
                 "key": key,
-                "title": meta["title"],
+                "title": mode_title(key, meta["title"]),
                 "subtitle": meta["subtitle"],
                 "blurb": meta["blurb"],
                 "domain": meta["domain"],
@@ -94,8 +171,29 @@ def list_modes():
                 "locked": not ent.can_play_mode(key) if not ent.is_pro() else False,
                 "free": key in FREE_MODE_KEYS,
                 "level": st.level if st else 1,
+                "sessions": st.sessions if st else 0,
+                "high": st.high_score if st else 0,
             }
         )
+
+    if sort in ("name", "az", "a-z"):
+        modes.sort(key=lambda m: (m["title"] or "").lower())
+    elif sort in ("name_desc", "za", "z-a"):
+        modes.sort(key=lambda m: (m["title"] or "").lower(), reverse=True)
+    elif sort == "domain":
+        modes.sort(key=lambda m: ((m["domain"] or "").lower(), (m["title"] or "").lower()))
+    elif sort == "level":
+        modes.sort(key=lambda m: (-int(m.get("level") or 1), (m["title"] or "").lower()))
+    elif sort == "level_asc":
+        modes.sort(key=lambda m: (int(m.get("level") or 1), (m["title"] or "").lower()))
+    elif sort in ("free", "free_first"):
+        modes.sort(key=lambda m: (0 if m.get("free") else 1, 1 if m.get("locked") else 0, (m["title"] or "").lower()))
+    elif sort in ("locked", "pro"):
+        modes.sort(key=lambda m: (0 if m.get("locked") else 1, (m["title"] or "").lower()))
+    elif sort == "played":
+        modes.sort(key=lambda m: (-int(m.get("sessions") or 0), (m["title"] or "").lower()))
+    # default: catalog order (MODE_META insertion order)
+
     return jsonify(
         {
             "modes": modes,
@@ -104,6 +202,19 @@ def list_modes():
             "free_keys": list(FREE_MODE_KEYS),
             "daily": ["focus", "memory", "switch", "speed", "nback"],
             "version": __version__,
+            "lang": lang,
+            "sort": sort,
+            "sort_options": [
+                {"id": "default", "label": "Default order"},
+                {"id": "name", "label": "Name A–Z"},
+                {"id": "name_desc", "label": "Name Z–A"},
+                {"id": "domain", "label": "Domain"},
+                {"id": "level", "label": "Level (high first)"},
+                {"id": "level_asc", "label": "Level (low first)"},
+                {"id": "free", "label": "Free first"},
+                {"id": "locked", "label": "Pro / locked first"},
+                {"id": "played", "label": "Most played"},
+            ],
         }
     )
 

@@ -15,7 +15,34 @@
     pro: false,
     sound: true,
     timers: [],
+    lang: localStorage.getItem("nf_lang") || "en",
+    i18n: {},
+    sort: localStorage.getItem("nf_mode_sort") || "default",
   };
+
+  function tr(key, fallback, vars) {
+    let s = (state.i18n && state.i18n[key]) || fallback || key;
+    if (vars) {
+      Object.keys(vars).forEach((k) => {
+        s = s.replace(new RegExp("\\{" + k + "\\}", "g"), String(vars[k]));
+      });
+    }
+    return s;
+  }
+
+  function applyI18nDom() {
+    document.querySelectorAll("[data-i18n]").forEach((el) => {
+      const key = el.getAttribute("data-i18n");
+      if (!key) return;
+      // full_gym needs count — handled in loadHome for btnFull
+      if (key === "home.full_gym" || key === "home.full_gym_pro") return;
+      if (key === "home.sound_on" || key === "home.sound_off") return;
+      const text = tr(key, el.textContent);
+      if (text) el.textContent = text;
+    });
+    if (state.i18n["app.title"]) document.title = state.i18n["app.title"];
+    document.documentElement.lang = state.lang || "en";
+  }
 
   const LANGS = [
     ["en", "English  (English)"],
@@ -83,29 +110,80 @@
     });
   }
 
+  async function loadI18n(lang) {
+    const code = lang || state.lang || "en";
+    try {
+      const data = await api(`/api/i18n?lang=${encodeURIComponent(code)}`);
+      state.lang = data.lang || code;
+      state.i18n = data.strings || {};
+      localStorage.setItem("nf_lang", state.lang);
+      if (data.languages && data.languages.length) {
+        state.langList = data.languages;
+      }
+      applyI18nDom();
+      return data;
+    } catch (e) {
+      state.i18n = state.i18n || {};
+      return null;
+    }
+  }
+
+  async function setLanguage(code) {
+    if (!code) return;
+    state.lang = code;
+    localStorage.setItem("nf_lang", code);
+    try {
+      const data = await api("/api/language", {
+        method: "POST",
+        body: JSON.stringify({ lang: code }),
+      });
+      state.lang = data.lang || code;
+      state.i18n = data.strings || {};
+      if (data.languages) state.langList = data.languages;
+      applyI18nDom();
+    } catch (e) {
+      await loadI18n(code);
+    }
+    // Refresh screens so mode titles / buttons use new language
+    state.modesCache = null;
+    await loadHome();
+  }
+
   function fillLangSelects() {
+    const list =
+      state.langList ||
+      LANGS.map(([code, label]) => ({ code, label }));
     ["#langSelect", "#langSelect2"].forEach((sel) => {
       const el = $(sel);
       if (!el) return;
+      const prev = el.value || state.lang || "en";
       el.innerHTML = "";
-      LANGS.forEach(([code, label]) => {
+      list.forEach((item) => {
+        const code = item.code || item[0];
+        const label = item.label || item[1];
         const o = document.createElement("option");
         o.value = code;
         o.textContent = label;
         el.appendChild(o);
       });
-      const saved = localStorage.getItem("nf_lang") || "en";
-      el.value = saved;
+      el.value = state.lang || prev || "en";
       el.onchange = () => {
-        localStorage.setItem("nf_lang", el.value);
-        fillLangSelects();
+        setLanguage(el.value).catch((err) => alert(err.message || "Language failed"));
       };
     });
   }
 
   async function loadHome() {
     try {
-      const modes = await api("/api/modes");
+      if (!state.i18n || !Object.keys(state.i18n).length) {
+        await loadI18n(state.lang);
+      }
+      fillLangSelects();
+      applyI18nDom();
+
+      const langQ = encodeURIComponent(state.lang || "en");
+      const sortQ = encodeURIComponent(state.sort || "default");
+      const modes = await api(`/api/modes?lang=${langQ}&sort=${sortQ}`);
       const prog = await api("/api/progress");
       state.modesCache = modes;
       state.pro = !!modes.pro;
@@ -116,32 +194,75 @@
 
       const n = modes.modes.length;
       $("#homeSub").textContent =
-        `${n} research drills · Adaptive Difficulty Engine\n${modes.status || ""}`;
+        tr("home.subtitle", "{n} research drills · Adaptive Difficulty Engine", { n }) +
+        "\n" +
+        (modes.status || "");
       $("#growthTitle").textContent = prog.title || "Trainee";
       $("#growthPts").textContent = `${prog.growth || 0} GP`;
-      $("#streakLine").textContent =
-        `Streak ${prog.streak || 0} day(s)  ·  Best ${prog.best_streak || 0}  ·  ${prog.sessions || 0} sessions`;
+      $("#streakLine").textContent = tr(
+        "home.streak",
+        `Streak ${prog.streak || 0} day(s)  ·  Best ${prog.best_streak || 0}  ·  ${prog.sessions || 0} sessions`,
+        {
+          n: prog.streak || 0,
+          best: prog.best_streak || 0,
+          sessions: prog.sessions || 0,
+        }
+      );
       const fill = Math.min(1, ((prog.growth || 0) % 200) / 200) || 0.05;
       $("#growthBar").style.width = `${fill * 100}%`;
       $("#btnFull").textContent = modes.pro
-        ? `Full Gym  (all ${n} modes)`
-        : "Full Gym  (Pro)";
+        ? tr("home.full_gym", `Full Gym  (all ${n} modes)`, { n })
+        : tr("home.full_gym_pro", "Full Gym  (Pro)");
+      $("#btnDaily").textContent = tr("home.daily", "▶  Daily Circuit  (5 modes)");
+      $("#btnModes").textContent = tr("home.train", "Train a single skill");
+      $("#btnPro").textContent = tr("home.pro", "⭐  Go Pro  ·  Plans & pricing");
+      $("#btnProgress").textContent = tr("home.progress", "Progress & science");
+      $("#btnSettings").textContent = tr("home.settings", "Settings · Language & alerts");
       $("#adBanner").classList.toggle("hidden", !!modes.pro);
-      $("#playerLine").textContent =
-        `Player: ${prog.name || "Trainee"}  ·  v${modes.version || "1.8"}`;
+      $("#playerLine").textContent = tr(
+        "home.player",
+        `Player: ${prog.name || "Trainee"}  ·  v${modes.version || "1.8"}`,
+        { name: prog.name || "Trainee", version: modes.version || "1.8" }
+      );
     } catch (e) {
       $("#homeSub").textContent =
-        "Server offline — double-click Start Web App.bat and keep that window open.";
+        "Server offline — check Render logs or Start Web App.bat";
     }
     show("home");
   }
 
   async function loadModes() {
-    const data = state.modesCache || (await api("/api/modes"));
+    const langQ = encodeURIComponent(state.lang || "en");
+    const sortQ = encodeURIComponent(state.sort || "default");
+    const data = await api(`/api/modes?lang=${langQ}&sort=${sortQ}`);
     state.modesCache = data;
+
+    const sortEl = $("#modeSort");
+    if (sortEl) {
+      // populate labels from API when present
+      if (data.sort_options && data.sort_options.length) {
+        const cur = state.sort || "default";
+        sortEl.innerHTML = "";
+        data.sort_options.forEach((opt) => {
+          const o = document.createElement("option");
+          o.value = opt.id;
+          o.textContent = opt.label;
+          sortEl.appendChild(o);
+        });
+        sortEl.value = cur;
+      } else {
+        sortEl.value = state.sort || "default";
+      }
+      sortEl.onchange = () => {
+        state.sort = sortEl.value || "default";
+        localStorage.setItem("nf_mode_sort", state.sort);
+        loadModes().catch((e) => alert(e.message));
+      };
+    }
+
     $("#modesHint").textContent = data.pro
-      ? `${data.modes.length} research paradigms · Pro: all modes unlocked · no ads`
-      : `${data.modes.length} research paradigms · Free: ${data.free_keys.length} modes · locked modes need Pro`;
+      ? `${data.modes.length} · Pro: all modes unlocked · no ads`
+      : `${data.modes.length} · Free: ${(data.free_keys || []).length} modes · locked need Pro`;
     const list = $("#modeList");
     list.innerHTML = "";
     data.modes.forEach((m) => {
@@ -153,15 +274,17 @@
           <h3 style="color:${m.color}">${m.title}${m.locked ? "  🔒" : ""}</h3>
           <span class="gold small">Lv ${m.level || 1}</span>
         </div>
-        <p>${m.subtitle}</p>
-        <div class="blurb">${m.blurb}</div>
+        <p>${m.subtitle || ""}</p>
+        <div class="blurb">${m.domain ? m.domain + " · " : ""}${m.blurb || ""}</div>
         <div class="start-wrap"></div>`;
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = m.locked ? "btn gold" : "btn primary";
       btn.style.background = m.locked ? "" : m.color;
       btn.style.color = m.locked ? "" : "#0b1020";
-      btn.textContent = m.locked ? "Unlock with Pro" : "Start";
+      btn.textContent = m.locked
+        ? tr("unlock_pro", "Unlock with Pro")
+        : tr("start", "Start");
       btn.onclick = () => {
         if (m.locked) {
           loadPro();
@@ -1401,8 +1524,14 @@
     };
   });
 
-  fillLangSelects();
-  loadHome();
+  // Boot: language → home
+  (async () => {
+    try {
+      await loadI18n(state.lang);
+      fillLangSelects();
+    } catch (_) {}
+    await loadHome();
+  })();
   // Mobile-first push (iPhone / Android / PWA)
   if (window.NFPush) {
     NFPush.init().then(() => {
