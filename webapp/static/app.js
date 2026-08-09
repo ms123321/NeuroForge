@@ -213,6 +213,23 @@
   }
 
   async function buy(plan) {
+    // In Despia: open native App Store / Play paywall (RevenueCat)
+    if (window.NFDespia && NFDespia.isDespia && plan !== "restore") {
+      await NFDespia.openPaywall("default");
+      // Entitlement callback may unlock Pro; refresh shortly
+      setTimeout(async () => {
+        if (NFDespia.checkEntitlements) await NFDespia.checkEntitlements();
+        state.modesCache = null;
+        await loadHome();
+      }, 1500);
+      return;
+    }
+    if (window.NFDespia && NFDespia.isDespia && plan === "restore") {
+      await NFDespia.restorePurchases();
+      state.modesCache = null;
+      await loadHome();
+      return;
+    }
     try {
       const r = await api("/api/pro/buy", {
         method: "POST",
@@ -354,6 +371,9 @@
       });
       setFeedback(data.event);
       updateHud(data);
+      if (window.NFDespia && NFDespia.isDespia && data.event) {
+        NFDespia.haptic(data.event.good ? "correct" : "wrong");
+      }
       if (data.done) {
         showResult(data);
         return data;
@@ -408,6 +428,9 @@
       if (entry.level_delta > 0) {
         NFPush.event("level", { level: entry.level_after });
       }
+    }
+    if (window.NFDespia && NFDespia.isDespia) {
+      NFDespia.haptic(entry.level_delta > 0 ? "level" : "success");
     }
     show("result");
   }
@@ -469,7 +492,15 @@
       if (p.days) notifDays = { ...notifDays, ...p.days };
       renderDayChips();
       $("#quietRow").classList.toggle("hidden", !p.quiet_hours);
-      if (window.NFPush) {
+      if (window.NFDespia && NFDespia.isDespia) {
+        $("#pushStatus").textContent = NFDespia.isIOS
+          ? "Despia iOS · OneSignal / APNs ready"
+          : NFDespia.isAndroid
+            ? "Despia Android · OneSignal / FCM ready"
+            : "Despia native · push ready";
+        $("#pushHint").textContent =
+          "Running inside Despia. Enable OneSignal in Despia Integrations for remote push.";
+      } else if (window.NFPush) {
         NFPush.prefs = p;
         NFPush.schedule = data.schedule;
         $("#pushStatus").textContent = NFPush.statusLine();
@@ -529,6 +560,14 @@
   }
 
   async function enablePush() {
+    // Prefer Despia native (OneSignal) when inside the app shell
+    if (window.NFDespia && NFDespia.isDespia) {
+      const r = await NFDespia.enablePush();
+      if (r.ok) alert(r.message || "Phone push enabled (Despia)");
+      else alert(r.reason || "Could not enable Despia push");
+      await loadNotifSettings();
+      return;
+    }
     if (!window.NFPush) {
       alert("Push module not loaded");
       return;
@@ -545,6 +584,10 @@
   }
 
   async function testPush() {
+    if (window.NFDespia && NFDespia.isDespia) {
+      await NFDespia.testPush();
+      return;
+    }
     if (!window.NFPush) return;
     if (Notification.permission !== "granted") {
       const r = await NFPush.enable();

@@ -29,6 +29,29 @@ html, body {
   min-height: 100%;
 }
 
+/* Despia injects --safe-area-top / --safe-area-bottom */
+html.despia body,
+body.despia {
+  background: var(--bg);
+  padding-top: var(--safe-area-top, env(safe-area-inset-top, 0px));
+  padding-bottom: var(--safe-area-bottom, env(safe-area-inset-bottom, 0px));
+}
+html.despia .phone,
+body.despia .phone {
+  width: 100%;
+  max-width: none;
+  min-height: 100vh;
+  min-height: 100dvh;
+  border-radius: 0;
+  box-shadow: none;
+}
+html.despia #app,
+body.despia #app {
+  max-width: none;
+  min-height: 100%;
+  padding-top: 12px;
+}
+
 /* Centered phone-like window (mirrors desktop geometry) */
 body {
   display: flex;

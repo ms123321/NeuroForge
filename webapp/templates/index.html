@@ -6,15 +6,17 @@
   <meta name="theme-color" content="#0B1020" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <title>NeuroForge — Brain Training</title>
-  <link rel="stylesheet" href="/static/app.css?v=1.8.2" />
+  <link rel="stylesheet" href="/static/app.css?v=1.9.0" />
   <link rel="manifest" href="/static/manifest.json" />
   <link rel="apple-touch-icon" href="/static/icon-192.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="mobile-web-app-capable" content="yes" />
+  <!-- Despia native SDK (haptics, push, RevenueCat, safe areas) -->
+  <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
 </head>
 <body>
-  <!-- Desktop-sized phone shell (matches tkinter 420×780 window) -->
+  <!-- Phone shell (full-bleed inside Despia native WebView) -->
   <div id="phone" class="phone">
     <div id="app">
 
@@ -206,7 +208,8 @@
 
     </div>
   </div>
-  <script src="/static/push.js?v=1.8.2"></script>
-  <script src="/static/app.js?v=1.8.2"></script>
+  <script src="/static/despia.js?v=1.9.0"></script>
+  <script src="/static/push.js?v=1.9.0"></script>
+  <script src="/static/app.js?v=1.9.0"></script>
 </body>
 </html>
