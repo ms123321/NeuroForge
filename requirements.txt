@@ -1,5 +1,7 @@
-# Production web (Railway / Render / Docker)
-# Start: python start.py
+# Production web (Render / Railway / Docker)
+# Preferred start:  python start.py
+# Render default fallback:  gunicorn your_application.wsgi
 flask>=3.0.0,<4
 waitress>=3.0.0,<4
+gunicorn>=22.0.0,<24
 werkzeug>=3.0.0

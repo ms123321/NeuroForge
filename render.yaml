@@ -1,6 +1,6 @@
-# Render Blueprint — https://render.com
-# Dashboard: New → Blueprint → connect ms123321/NeuroForge
-# Or: New → Web Service → this repo (manual settings below match)
+# Render Blueprint — forces correct start (not gunicorn your_application.wsgi default)
+# Dashboard: New → Blueprint → ms123321/NeuroForge
+# Or edit existing Web Service settings to match below.
 
 services:
   - type: web
@@ -9,6 +9,7 @@ services:
     plan: free
     region: oregon
     branch: main
+    autoDeploy: true
     buildCommand: pip install -r requirements.txt
     startCommand: python start.py
     healthCheckPath: /api/health
@@ -17,4 +18,3 @@ services:
         value: "3.12.8"
       - key: SECRET_KEY
         generateValue: true
-      # Render sets PORT automatically — start.py reads it

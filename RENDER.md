@@ -1,101 +1,71 @@
 # Deploy NeuroForge on Render (for Despia)
 
-Railway is no longer required. Use **Render** → free HTTPS URL → paste into Despia.
-
 **Repo:** https://github.com/ms123321/NeuroForge  
-**Start command:** `python start.py` (Waitress on `0.0.0.0:$PORT`)
 
----
+## Critical: Start command
 
-## Option A — One-click Blueprint (easiest)
+Render’s **default** is broken for this app:
 
-1. Log in at [https://dashboard.render.com](https://dashboard.render.com)
-2. **New** → **Blueprint**
-3. Connect GitHub → select **`ms123321/NeuroForge`**
-4. Render reads `render.yaml` and creates the **neuroforge** web service
-5. Apply / create
-6. Wait for deploy → green **Live**
-7. Open the URL Render shows, e.g.  
-   `https://neuroforge.onrender.com`
+```text
+gunicorn your_application.wsgi   ← default (often wrong / missing package)
+```
 
----
+You **must** set:
 
-## Option B — Manual Web Service
-
-1. **New** → **Web Service**
-2. Connect **`ms123321/NeuroForge`** (branch `main`)
-3. Settings:
+```text
+python start.py
+```
 
 | Field | Value |
 |--------|--------|
-| **Name** | `neuroforge` |
-| **Runtime** | Python 3 |
 | **Build Command** | `pip install -r requirements.txt` |
 | **Start Command** | `python start.py` |
-| **Instance type** | Free |
+| **Python** | `3.12.8` (set env `PYTHON_VERSION=3.12.8` or use `.python-version`) |
 
-4. **Environment** variables:
+If the service was created with the wrong start command, open:
 
-| Key | Value |
-|-----|--------|
-| `SECRET_KEY` | any long random string |
-| `PYTHON_VERSION` | `3.12.8` (optional) |
-
-Do **not** set `PORT` yourself — Render injects it.
-
-5. **Create Web Service** → wait for Live
+**Dashboard → your service → Settings → Build & Deploy → Start Command**  
+→ change to `python start.py` → **Save** → **Manual Deploy**.
 
 ---
 
-## Test before Despia
+## New service (manual)
 
-| URL | Expect |
-|-----|--------|
-| `https://YOUR-SERVICE.onrender.com/api/health` | `{"ok":true,...}` |
-| `https://YOUR-SERVICE.onrender.com/` | NeuroForge home |
+1. [dashboard.render.com](https://dashboard.render.com) → **New → Web Service**
+2. GitHub **`ms123321/NeuroForge`**, branch **`main`**
+3. Runtime: **Python 3**
+4. Build: `pip install -r requirements.txt`
+5. Start: **`python start.py`**  ← do not leave default
+6. Env:
+   - `SECRET_KEY` = long random string  
+   - `PYTHON_VERSION` = `3.12.8`
+7. Create → wait for **Live**
+8. Open `https://YOUR.onrender.com/api/health`
 
-On free tier, the first request after ~15 min idle can take **30–60 seconds** (cold start). That’s normal.
+---
+
+## Blueprint
+
+**New → Blueprint** → this repo (`render.yaml` already sets `startCommand: python start.py`).
 
 ---
 
 ## Despia
 
-1. Open your Despia builder  
-2. **Web URL** = `https://YOUR-SERVICE.onrender.com`  
-   (not localhost, not railway.com)  
-3. Save → rebuild/preview if needed  
+Paste: `https://YOUR-SERVICE.onrender.com`  
+(not localhost, not Railway)
+
+Free tier cold start: first open after idle can take 30–60s.
 
 ---
 
-## Logs if deploy fails
-
-Render dashboard → service → **Logs**
-
-You want:
+## Logs you want
 
 ```text
 NeuroForge production start
- PORT=10000   (or whatever Render assigned)
  server=waitress
  Flask app loaded OK
  Starting Waitress on 0.0.0.0:...
 ```
 
-**Start command must be** `python start.py` — never bare `gunicorn`.
-
----
-
-## Checklist
-
-- [ ] GitHub repo connected: `ms123321/NeuroForge`
-- [ ] Build: `pip install -r requirements.txt`
-- [ ] Start: `python start.py`
-- [ ] Deploy Live
-- [ ] `/api/health` works in browser (wait if cold)
-- [ ] Same HTTPS URL in Despia
-
----
-
-## After code updates
-
-Push to `main` → Render auto-deploys → force-close Despia app → reopen for new web UI.
+**Not:** `Running 'gunicorn your_application.wsgi'` / `gunicorn: command not found`
