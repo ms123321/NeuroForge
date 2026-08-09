@@ -1,6 +1,16 @@
-# If Railway uses Nixpacks instead of Docker, still avoid bare `gunicorn`
 [phases.install]
-cmds = ["pip install -r requirements.txt"]
+cmds = [
+  "pip install -r requirements.txt",
+  "mkdir -p bin",
+  "printf '#!/bin/sh\\nexec python -m gunicorn \"$@\"\\n' > bin/gunicorn",
+  "chmod +x bin/gunicorn",
+  "mkdir -p $NIXPACKS_PATH 2>/dev/null || true",
+  "cp bin/gunicorn /usr/local/bin/gunicorn 2>/dev/null || cp bin/gunicorn $HOME/.local/bin/gunicorn 2>/dev/null || true",
+  "chmod +x /usr/local/bin/gunicorn 2>/dev/null || true"
+]
+
+[variables]
+PATH = "/app/bin:/usr/local/bin:$PATH"
 
 [start]
 cmd = "python start.py"

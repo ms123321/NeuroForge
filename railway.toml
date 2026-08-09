@@ -1,11 +1,6 @@
-# Railway — always start via Python (never bare `gunicorn` on PATH)
-#
-# Dashboard:
-#   Variables: PORT=8080  SECRET_KEY=...
-#   Public Networking port: 8080
-#   Custom Start Command: leave EMPTY or set exactly:
-#     python start.py
-#   Healthcheck: leave EMPTY for first deploy
+# If the Railway UI has a Custom Start Command containing bare `gunicorn`,
+# the Docker image now provides a PATH shim → python -m gunicorn.
+# Prefer clearing the UI field so this startCommand is used:
 
 [build]
 builder = "DOCKERFILE"
