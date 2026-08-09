@@ -39,41 +39,25 @@ If this fails, fix the web app first. Despia only shows whatever that site serve
 
 ## Step 2 — Put the site on HTTPS (required)
 
-Despia and App Store review need a real URL, e.g. `https://neuroforge-xxx.up.railway.app`.
+Despia and App Store review need a real URL, e.g. `https://neuroforge.onrender.com`.
 
-### Easiest path: Railway
+### Easiest path: Render (recommended)
 
-1. Create a free account: [railway.app](https://railway.app)
-2. **New Project → Deploy from GitHub**  
-   (push `C:\Users\gssei\NeuroForge` to GitHub first),  
-   **or** deploy from local CLI / zip if you prefer.
-3. Root directory: project root (where `webapp/` and `Procfile` live).
-4. Build / install:
+Full guide: **[`RENDER.md`](RENDER.md)** · Blueprint: `render.yaml`
 
-```text
-pip install -r requirements-web.txt
-```
+1. [dashboard.render.com](https://dashboard.render.com) → **New → Web Service**  
+2. Connect GitHub **`ms123321/NeuroForge`** (branch `main`)  
+3. **Build command:** `pip install -r requirements.txt`  
+4. **Start command:** `python start.py`  
+5. Env: `SECRET_KEY` = any long random string (Render sets `PORT`)  
+6. Deploy → copy URL, e.g. `https://neuroforge.onrender.com`  
 
-5. Start command (or use `Procfile`):
-
-```text
-gunicorn -b 0.0.0.0:$PORT -w 2 webapp.app:app
-```
-
-6. Variables:
-
-```text
-SECRET_KEY=choose-a-long-random-string
-```
-
-7. Deploy → copy the public URL, e.g.  
-   `https://neuroforge-production.up.railway.app`
+Or **New → Blueprint** and use the repo’s `render.yaml`.
 
 ### Alternatives
 
-- **Render.com** — Web Service, same start command, same `requirements-web.txt`
-- **Fly.io** — `fly launch` + gunicorn
-- Details: `WEB_DEPLOY.md`
+- Railway — optional (`RAILWAY.md`)  
+- Fly.io / AWS — `WEB_DEPLOY.md` / `XCODE_AWS.md`
 
 **Test on your phone’s browser first**  
 Open the HTTPS link on iPhone/Android Safari/Chrome. Play a mode.  
