@@ -1,10 +1,5 @@
-# Production / Railway / Render / web
-# Start with:  python start.py
-# (Do NOT use bare `gunicorn` on PATH — use start.py or: python -m gunicorn ...)
+# Production web (Railway / Render / Docker)
+# Start: python start.py
 flask>=3.0.0,<4
-gunicorn>=22.0.0,<24
+waitress>=3.0.0,<4
 werkzeug>=3.0.0
-
-# Mobile packaging (optional):
-#   pip install -r requirements-mobile.txt
-

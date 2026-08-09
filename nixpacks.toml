@@ -1,17 +1,5 @@
 [phases.install]
-cmds = [
-  "pip install -r requirements.txt",
-  "mkdir -p bin",
-  "printf '%s\\n' '#!/bin/sh' 'exec python -m gunicorn \"$@\"' > bin/gunicorn",
-  "chmod +x bin/gunicorn",
-  "cp bin/gunicorn /usr/local/bin/gunicorn || true",
-  "chmod +x /usr/local/bin/gunicorn || true",
-  "python -m gunicorn --version"
-]
-
-[variables]
-NIXPACKS_PATH = "/app/bin:/usr/local/bin"
-PATH = "/app/bin:/usr/local/bin:$PATH"
+cmds = ["pip install -r requirements.txt"]
 
 [start]
 cmd = "python start.py"

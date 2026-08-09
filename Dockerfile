@@ -1,15 +1,11 @@
-# NeuroForge production image for Railway
-# Start: python start.py  (also provides `gunicorn` shim on PATH)
-
+# NeuroForge — Railway / Docker (Waitress, no gunicorn)
 FROM python:3.12-slim
 
 WORKDIR /app
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PORT=8080 \
-    WEB_CONCURRENCY=1 \
-    PATH="/app/bin:/usr/local/bin:${PATH}"
+    PORT=8080
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates \
@@ -17,19 +13,12 @@ RUN apt-get update \
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt
+    && pip install --no-cache-dir -r requirements.txt \
+    && python -c "import flask, waitress; print('deps-ok')"
 
 COPY . .
 
-# Ensure LF scripts + gunicorn on PATH (shell shim + pip console script)
-RUN sed -i 's/\r$//' /app/bin/gunicorn /app/start.sh 2>/dev/null || true \
-    && chmod +x /app/bin/gunicorn /app/start.sh \
-    && cp /app/bin/gunicorn /usr/local/bin/gunicorn \
-    && chmod +x /usr/local/bin/gunicorn \
-    && python -c "import gunicorn, flask; print('deps-ok', gunicorn.__version__)" \
-    && python -m gunicorn --version \
-    && /usr/local/bin/gunicorn --version \
-    && python -c "from webapp.app import app; print('build-import-ok')"
+RUN python -c "from webapp.app import app; print('build-import-ok')"
 
 EXPOSE 8080
 
