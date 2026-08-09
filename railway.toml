@@ -1,13 +1,14 @@
-# Railway — use Docker for predictable deploys
-# Public Networking port must match PORT (use 8080)
+# Railway config
+# Public Networking port = 8080  AND  Variable PORT = 8080
 
 [build]
 builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
 
 [deploy]
-startCommand = "gunicorn -b 0.0.0.0:${PORT:-8080} -w 1 -t 120 --access-logfile - --error-logfile - webapp.app:app"
+# Let Dockerfile CMD (start.sh) run — do NOT override with a broken startCommand
+# that leaves $PORT unexpanded.
 healthcheckPath = "/api/health"
-healthcheckTimeout = 30
+healthcheckTimeout = 100
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10

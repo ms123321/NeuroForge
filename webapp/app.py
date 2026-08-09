@@ -38,6 +38,14 @@ app = Flask(
 )
 app.secret_key = os.environ.get("SECRET_KEY", "neuroforge-dev-change-me")
 
+# Trust Railway / reverse-proxy headers (HTTPS, host)
+try:
+    from werkzeug.middleware.proxy_fix import ProxyFix
+
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+except Exception:
+    pass
+
 
 @app.after_request
 def _cors(resp):
@@ -47,6 +55,13 @@ def _cors(resp):
         resp.headers["Service-Worker-Allowed"] = "/"
         resp.headers["Cache-Control"] = "no-cache"
     return resp
+
+
+@app.get("/health")
+@app.get("/healthz")
+def healthz_alias():
+    """Extra health paths some hosts probe by default."""
+    return jsonify({"ok": True, "version": __version__})
 
 
 @app.get("/")
