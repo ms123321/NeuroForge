@@ -11,12 +11,21 @@ from typing import Any
 
 
 def _data_dir() -> Path:
-    base = Path(os.environ.get("LOCALAPPDATA") or Path.home() / ".neuroforge")
-    if os.name == "nt":
-        path = Path(base) / "NeuroForge"
+    # Prefer explicit data dir (Railway volume or local)
+    override = os.environ.get("NEUROFORGE_DATA") or os.environ.get("DATA_DIR")
+    if override:
+        path = Path(override)
+    elif os.name == "nt":
+        base = Path(os.environ.get("LOCALAPPDATA") or Path.home())
+        path = base / "NeuroForge"
     else:
-        path = Path.home() / ".neuroforge"
-    path.mkdir(parents=True, exist_ok=True)
+        # Linux / Railway / containers
+        path = Path(os.environ.get("HOME") or "/tmp") / ".neuroforge"
+    try:
+        path.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        path = Path("/tmp/neuroforge")
+        path.mkdir(parents=True, exist_ok=True)
     return path
 
 

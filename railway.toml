@@ -1,10 +1,13 @@
-# Railway config — https://docs.railway.com
-# Dashboard project ≠ public app URL. After deploy, use the service domain.
+# Railway — use Docker for predictable deploys
+# Public Networking port must match PORT (use 8080)
 
 [build]
-builder = "NIXPACKS"
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
 
 [deploy]
-startCommand = "gunicorn -b 0.0.0.0:$PORT -w 2 webapp.app:app"
+startCommand = "gunicorn -b 0.0.0.0:${PORT:-8080} -w 1 -t 120 --access-logfile - --error-logfile - webapp.app:app"
+healthcheckPath = "/api/health"
+healthcheckTimeout = 30
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10

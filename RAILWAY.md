@@ -13,6 +13,39 @@ That does **not** mean the game URL is ready. You must **deploy a service** firs
 
 ---
 
+## “Application failed to respond”
+
+Railway’s domain works, but nothing answers inside the container.
+
+### Fix (most common)
+
+1. **Service → Variables** — set:
+   ```text
+   PORT=8080
+   SECRET_KEY=any-long-random-string
+   ```
+2. **Public Networking** — domain port must be **`8080`** (same as PORT).
+3. **Settings → Deploy** — start command:
+   ```text
+   gunicorn -b 0.0.0.0:$PORT -w 1 -t 120 --access-logfile - --error-logfile - webapp.app:app
+   ```
+4. **Deployments** → open the latest deploy → **View Logs**.
+   - Look for `Listening at: http://0.0.0.0:8080` or similar.
+   - Red traceback = crash (copy it and fix).
+5. **Redeploy** (Deployments → ⋯ → Redeploy) after changing variables.
+
+### Port rule
+
+| Place | Value |
+|-------|--------|
+| Variable `PORT` | `8080` |
+| Public Networking port | `8080` |
+| App bind | `0.0.0.0:$PORT` |
+
+If those three disagree → **Application failed to respond**.
+
+---
+
 ## Fix in ~10 minutes
 
 ### 1. Open Railway while logged in
