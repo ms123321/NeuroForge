@@ -1,0 +1,59 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+*.egg-info/
+.eggs/
+dist/
+build/
+*.egg
+
+# Local data / secrets (keep off GitHub)
+data/
+*.local
+.env
+.env.*
+!.env.example
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs & temp
+*.log
+webapp/server.log
+webapp/server.err.log
+*.tmp
+.cache/
+
+# Backups & large zips (optional local only)
+backups/
+*.zip
+
+# Briefcase / mobile build output
+build/
+iOS/
+android/
+*.apk
+*.aab
+*.ipa
+
+# Test / backup noise
+*.bak
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local progress may live under user AppData — never commit secrets
+**/secrets/
+**/credentials.json
+**/service-account*.json

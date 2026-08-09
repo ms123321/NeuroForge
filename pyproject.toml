@@ -1,0 +1,71 @@
+[build-system]
+requires = ["briefcase"]
+
+[project]
+name = "neuroforge"
+version = "1.4.0"
+description = "Adaptive neuroplasticity brain-training — 27 research-inspired drills"
+readme = "README.md"
+requires-python = ">=3.10,<3.14"
+license = { text = "MIT" }
+authors = [{ name = "NeuroForge", email = "hello@neuroforge.app" }]
+keywords = ["brain-training", "neuroplasticity", "cognitive", "game", "mobile"]
+dependencies = []
+
+[project.optional-dependencies]
+mobile = ["toga>=0.4.5"]
+dev = ["briefcase>=0.3.19"]
+
+[project.scripts]
+neuroforge = "neuroforge.app:main"
+neuroforge-mobile = "neuroforge.mobile_app:main"
+
+# ── BeeWare Briefcase (iOS + Android + desktop) ─────────────────────────
+
+[tool.briefcase]
+project_name = "NeuroForge"
+bundle = "com.neuroforge.app"
+version = "1.4.0"
+url = "https://neuroforge.app"
+license.file = "LICENSE"
+author = "NeuroForge"
+author_email = "hello@neuroforge.app"
+
+[tool.briefcase.app.neuroforge]
+formal_name = "NeuroForge"
+description = "Adaptive brain training for attention, memory, and flexibility"
+long_description = """NeuroForge is a short-session brain training app with 27
+research-inspired drills (n-back, dual-task, Stroop, SART, Posner, SDMT-style,
+and more). Adaptive difficulty keeps you in the growth zone.
+
+Not a medical device. For entertainment and personal training only."""
+sources = ["neuroforge"]
+icon = "assets/icon"
+# Mobile entry (Toga). Desktop players still use: python main.py (tkinter)
+startup = "neuroforge.mobile_app"
+
+[tool.briefcase.app.neuroforge.macOS]
+requires = ["toga-cocoa>=0.4.5"]
+
+[tool.briefcase.app.neuroforge.windows]
+requires = ["toga-winforms>=0.4.5"]
+
+[tool.briefcase.app.neuroforge.linux]
+requires = ["toga-gtk>=0.4.5"]
+
+[tool.briefcase.app.neuroforge.iOS]
+requires = ["toga-iOS>=0.4.5"]
+supported = true
+
+[tool.briefcase.app.neuroforge.android]
+requires = ["toga-android>=0.4.5"]
+supported = true
+base_theme = "Theme.MaterialComponents.Light.DarkActionBar"
+# Android package id must match bundle
+build_gradle_extra_content = """
+android {
+    defaultConfig {
+        minSdkVersion 24
+    }
+}
+"""

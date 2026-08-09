@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+  <meta name="theme-color" content="#0B1020" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <title>NeuroForge — Brain Training</title>
+  <link rel="stylesheet" href="/static/app.css?v=1.8.2" />
+  <link rel="manifest" href="/static/manifest.json" />
+  <link rel="apple-touch-icon" href="/static/icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="mobile-web-app-capable" content="yes" />
+</head>
+<body>
+  <!-- Desktop-sized phone shell (matches tkinter 420×780 window) -->
+  <div id="phone" class="phone">
+    <div id="app">
+
+      <!-- HOME — same layout as neuroforge/app.py show_home -->
+      <main id="view-home" class="view">
+        <div class="lang-bar">
+          <label for="langSelect">Language:</label>
+          <select id="langSelect" class="lang-select"></select>
+        </div>
+
+        <div class="brand">NEUROFORGE</div>
+        <div class="tagline">Rewire. Adapt. Grow.</div>
+        <p class="muted sub" id="homeSub">Loading…</p>
+
+        <div class="card growth">
+          <div class="row">
+            <span class="teal" id="growthTitle">—</span>
+            <span class="gold" id="growthPts">0 GP</span>
+          </div>
+          <div class="muted small" id="streakLine">—</div>
+          <div class="bar"><div class="bar-fill" id="growthBar"></div></div>
+        </div>
+
+        <div class="actions-stack">
+          <button type="button" class="btn primary tall" id="btnDaily">▶  Daily Circuit  (5 modes)</button>
+          <button type="button" class="btn purple" id="btnFull">Full Gym  (Pro)</button>
+          <button type="button" class="btn elev" id="btnModes">Train a single skill</button>
+          <button type="button" class="btn gold" id="btnPro">⭐  Go Pro  ·  Plans &amp; pricing</button>
+          <button type="button" class="btn cardish" id="btnProgress">Progress &amp; science</button>
+          <button type="button" class="btn elev" id="btnSettings">Settings · Language &amp; alerts</button>
+          <button type="button" class="btn panel dim-btn" id="btnSound">Sound &amp; haptics: ON</button>
+        </div>
+
+        <div class="ad-banner" id="adBanner">AD  ·  Free plan  ·  Upgrade to remove ads</div>
+
+        <footer class="foot">
+          <span id="playerLine">Player: Trainee</span>
+          <button type="button" class="link-inline" id="btnRename">Edit name</button>
+        </footer>
+      </main>
+
+      <!-- MODES -->
+      <main id="view-modes" class="view hidden">
+        <button type="button" class="link" data-go="home">← Back</button>
+        <h2>Choose a skill</h2>
+        <p class="muted small" id="modesHint"></p>
+        <div id="modeList" class="mode-list"></div>
+      </main>
+
+      <!-- PLAY -->
+      <main id="view-play" class="view hidden">
+        <button type="button" class="link" id="btnQuitPlay">← Back</button>
+        <div class="play-head">
+          <h2 id="playTitle">Mode</h2>
+          <div class="level-pill" id="playLevel">Lv 1</div>
+        </div>
+        <div class="hud-row">
+          <span class="gold" id="playScore">Score  0</span>
+          <span class="muted small" id="playRound">1 / 12</span>
+        </div>
+        <div class="bar thin"><div class="bar-fill" id="playBar"></div></div>
+        <div class="feedback" id="playFeedback"> </div>
+        <div class="prompt" id="playPrompt"></div>
+        <div class="display" id="playDisplay"></div>
+        <div class="stage" id="playStage"></div>
+        <div class="actions" id="playActions"></div>
+      </main>
+
+      <!-- RESULT -->
+      <main id="view-result" class="view hidden">
+        <button type="button" class="link" data-go="home">← Back</button>
+        <h2>Session complete</h2>
+        <div class="card">
+          <div id="resultTitle" class="mode-name"></div>
+          <div class="score-big" id="resultScore">0</div>
+          <div class="muted small">score</div>
+          <div class="muted" id="resultDetail" style="margin-top:12px"></div>
+        </div>
+        <div class="card" id="resultTip"></div>
+        <button type="button" class="btn primary" id="btnNextCircuit" style="display:none">Next mode</button>
+        <button type="button" class="btn teal" id="btnAgain">Train again</button>
+        <button type="button" class="btn elev" data-go="home">Home</button>
+      </main>
+
+      <!-- PROGRESS -->
+      <main id="view-progress" class="view hidden">
+        <button type="button" class="link" data-go="home">← Back</button>
+        <h2>Progress &amp; science</h2>
+        <div class="card" id="progressSummary"></div>
+        <div id="progressModes" class="mode-list"></div>
+        <div class="card muted small">
+          Neuroplasticity is the brain’s ability to reorganize with practice.
+          NeuroForge uses adaptive difficulty and research-inspired drills.
+          Not a medical device.
+        </div>
+      </main>
+
+      <!-- PRO -->
+      <main id="view-pro" class="view hidden">
+        <button type="button" class="link" data-go="home">← Back</button>
+        <h2>Go Pro</h2>
+        <p class="muted small" id="proStatus"></p>
+        <div class="card plan">
+          <h3>Free  (with ads)</h3>
+          <p class="muted small">• Core free modes · Daily Circuit<br>• Limited sessions/day · ads</p>
+          <div class="teal small" id="planFreeCurrent"></div>
+        </div>
+        <div class="card plan">
+          <h3 class="accent">Pro Subscribe</h3>
+          <p class="muted small">• All modes · Full Gym · no ads · unlimited</p>
+          <div class="row-btns">
+            <button type="button" class="btn primary" id="buyMonth">Monthly $4.99</button>
+            <button type="button" class="btn purple" id="buyYear">Yearly $29.99</button>
+          </div>
+        </div>
+        <div class="card plan">
+          <h3 class="gold">Pro Lifetime</h3>
+          <p class="muted small">• One payment $49.99 · forever · no ads</p>
+          <button type="button" class="btn gold" id="buyLife">Buy Lifetime $49.99</button>
+        </div>
+        <button type="button" class="btn elev" id="btnRestore">Restore purchases</button>
+        <p class="muted small">Web simulates IAP like the desktop app.</p>
+      </main>
+
+      <!-- SETTINGS — mobile push (iPhone / Android / PWA) -->
+      <main id="view-settings" class="view hidden">
+        <button type="button" class="link" data-go="home">← Back</button>
+        <h2>Settings</h2>
+
+        <div class="card">
+          <label class="muted small">Language</label>
+          <select id="langSelect2" class="lang-select full"></select>
+        </div>
+
+        <div class="card">
+          <h3>Sound</h3>
+          <button type="button" class="btn elev" id="btnSound2">Sound &amp; haptics: ON</button>
+        </div>
+
+        <div class="card">
+          <h3>Push notifications</h3>
+          <p class="muted small" id="pushStatus">Optimized for iPhone &amp; Android (APNs / FCM / Web Push).</p>
+          <p class="muted small" id="pushHint" style="margin-top:6px"></p>
+          <button type="button" class="btn teal" id="btnPushEnable" style="margin-top:10px">Enable phone push</button>
+          <button type="button" class="btn primary" id="btnPushTest" style="margin-top:8px">Send test notification</button>
+        </div>
+
+        <div class="card" id="notifToggles">
+          <h3>Reminder types</h3>
+          <label class="check"><input type="checkbox" id="n_enabled" /> Push master switch</label>
+          <label class="check"><input type="checkbox" id="n_daily" /> Morning training reminder</label>
+          <label class="check"><input type="checkbox" id="n_evening" /> Evening check-in</label>
+          <label class="check"><input type="checkbox" id="n_streak" /> Streak-at-risk alerts</label>
+          <label class="check"><input type="checkbox" id="n_session" /> Session complete</label>
+          <label class="check"><input type="checkbox" id="n_level" /> Level-up celebrations</label>
+          <label class="check"><input type="checkbox" id="n_weekly" /> Weekly summary</label>
+          <label class="check"><input type="checkbox" id="n_motiv" /> Motivational tips</label>
+          <label class="check"><input type="checkbox" id="n_sound" /> Notification sound</label>
+          <label class="check"><input type="checkbox" id="n_quiet" /> Quiet hours</label>
+        </div>
+
+        <div class="card">
+          <h3>Schedule</h3>
+          <div class="time-row">
+            <label class="muted small">Morning</label>
+            <input type="time" id="n_daily_time" class="time-input" value="09:00" />
+          </div>
+          <div class="time-row">
+            <label class="muted small">Evening</label>
+            <input type="time" id="n_evening_time" class="time-input" value="18:00" />
+          </div>
+          <div class="time-row quiet-row hidden" id="quietRow">
+            <label class="muted small">Quiet start</label>
+            <input type="number" id="n_quiet_start" class="num-input" min="0" max="23" value="22" />
+            <label class="muted small">end</label>
+            <input type="number" id="n_quiet_end" class="num-input" min="0" max="23" value="7" />
+          </div>
+          <p class="muted small" style="margin-top:10px">Reminder days</p>
+          <div class="day-row" id="dayRow"></div>
+          <button type="button" class="btn teal" id="btnSaveNotif" style="margin-top:12px">Save &amp; apply schedule</button>
+        </div>
+
+        <div class="card muted small">
+          <strong>iPhone:</strong> Safari → Share → Add to Home Screen → open icon → Enable phone push.<br><br>
+          <strong>Android:</strong> Chrome → menu → Install app (or Allow notifications) → Enable phone push.<br><br>
+          Native App Store builds use the same prefs via APNs / FCM — see <code>MOBILE_PUSH.md</code>.
+        </div>
+      </main>
+
+    </div>
+  </div>
+  <script src="/static/push.js?v=1.8.2"></script>
+  <script src="/static/app.js?v=1.8.2"></script>
+</body>
+</html>

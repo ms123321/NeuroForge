@@ -1,0 +1,3 @@
+# Desktop (full game): no third-party deps — Python + tkinter only.
+# Mobile packaging:
+#   pip install -r requirements-mobile.txt

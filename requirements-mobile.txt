@@ -1,0 +1,7 @@
+# Mobile packaging (BeeWare / Toga / Briefcase)
+# Install on the machine that builds iOS (Mac) or Android (Mac/Windows/Linux):
+#
+#   pip install -r requirements-mobile.txt
+#
+briefcase>=0.3.19
+toga>=0.4.5
