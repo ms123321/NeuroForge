@@ -19,7 +19,8 @@ from flask import Flask, jsonify, render_template, request, session
 
 from neuroforge import __version__
 from neuroforge.logic import ENGINES
-from neuroforge.modes import MODE_META
+# meta only — never import tkinter UI modes on the server
+from neuroforge.modes.meta import MODE_META
 from neuroforge import theme as T
 from neuroforge.progress import Progress
 from neuroforge.monetization import FREE_MODE_KEYS, Entitlement
